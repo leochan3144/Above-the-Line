@@ -1,0 +1,670 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Above the Line</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=JetBrains+Mono:wght@500;700&family=STIX+Two+Text:ital,wght@0,400;0,600;1,400&display=swap">
+<style>
+/* Layout: a sheet of graph paper on the left (curve + x-axis answer strip), a lab notebook of method steps on the right. */
+:root{
+  --bg:#E8EEF1; --card:#FAFCFD; --card2:#F1F5F7; --grid:#DFE8EC; --grid2:#BDCFD8;
+  --ink:#122536; --muted:#55707F; --rule:#C8D5DC;
+  --pen:#1F4FA3; --red:#CC3B2F; --hi:#D6EA33; --hi-ink:#1C2400;
+  --good:#1A7F50; --bad:#C2362A; --good-bg:#E2F3EA; --bad-bg:#FBE6E3;
+  --f-display:"Bricolage Grotesque", "Avenir Next", system-ui, sans-serif;
+  --f-body:"Atkinson Hyperlegible", "Segoe UI", system-ui, sans-serif;
+  --f-mono:"JetBrains Mono", ui-monospace, Menlo, monospace;
+  --f-math:"STIX Two Text", "Cambria Math", "Times New Roman", serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0C1720; --card:#111F29; --card2:#162733; --grid:#1A2C38; --grid2:#2A4352;
+  --ink:#E3EDF2; --muted:#8FA8B6; --rule:#253B48;
+  --pen:#8FB9FF; --red:#FF7D6D; --hi:#C3D82B; --hi-ink:#151B00;
+  --good:#4FCB8E; --bad:#FF8070; --good-bg:#12352A; --bad-bg:#3D1D1A; color-scheme:dark;}}
+:root[data-theme="dark"]{
+  --bg:#0C1720; --card:#111F29; --card2:#162733; --grid:#1A2C38; --grid2:#2A4352;
+  --ink:#E3EDF2; --muted:#8FA8B6; --rule:#253B48;
+  --pen:#8FB9FF; --red:#FF7D6D; --hi:#C3D82B; --hi-ink:#151B00;
+  --good:#4FCB8E; --bad:#FF8070; --good-bg:#12352A; --bad-bg:#3D1D1A; color-scheme:dark;}
+
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.5}
+.app{max-width:1200px;margin:0 auto;padding-inline:16px;padding-block:22px 40px;display:flex;flex-direction:column;gap:16px}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible,svg:focus-visible,[tabindex]:focus-visible{outline:3px solid var(--pen);outline-offset:2px}
+.m{font-family:var(--f-math);font-size:1.08em}
+.m i{font-style:italic}
+sup,sub{font-size:.7em;line-height:0}
+
+/* header */
+.top{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:14px 24px}
+.brand h1{font-family:var(--f-display);font-weight:800;font-size:clamp(30px,5vw,46px);line-height:.95;letter-spacing:-.02em;margin:0;text-wrap:balance}
+.brand h1 .ln{position:relative;white-space:nowrap}
+.brand h1 .ln::after{content:"";position:absolute;left:-2px;right:-2px;bottom:-.06em;height:.12em;background:var(--red);border-radius:2px}
+.brand p{margin:10px 0 0;color:var(--muted);max-width:56ch}
+.hud{display:flex;gap:8px}
+.hud div{background:var(--card);border:1px solid var(--rule);border-radius:10px;padding:6px 12px;min-width:76px}
+.hud span{display:block;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.hud b{font-family:var(--f-mono);font-size:20px;font-variant-numeric:tabular-nums}
+
+/* round strip */
+.rounds{display:flex;flex-wrap:wrap;gap:6px}
+.chip{border:1px solid var(--rule);background:var(--card);border-radius:8px;padding:5px 9px 4px;font-family:var(--f-mono);font-size:13px;font-weight:700;display:flex;flex-direction:column;align-items:center;gap:1px;min-width:44px}
+.chip small{font-size:9px;letter-spacing:1px;color:var(--muted);font-weight:500;height:11px}
+.chip.cur{background:var(--ink);color:var(--card);border-color:var(--ink)}
+.chip.cur small{color:var(--hi)}
+.chip.done small{color:var(--good)}
+.chip.cur.done small{color:var(--hi)}
+
+/* stage */
+.stage{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:18px;align-items:start}
+@media (max-width:880px){.stage{grid-template-columns:minmax(0,1fr)}.method{order:2}.board{padding:10px}}
+.board{background:var(--card);border:1px solid var(--rule);border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:8px;min-width:0}
+.qhead{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 12px}
+.qtag{font-family:var(--f-mono);font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;background:var(--hi);color:var(--hi-ink);padding:2px 8px;border-radius:5px}
+.ineq{font-family:var(--f-math);font-size:clamp(20px,2.6vw,26px);line-height:1.3}
+.ineq i{font-style:italic}
+.ineq .dom{font-size:.72em;color:var(--muted)}
+.ineq .arrow{color:var(--muted);margin:0 .25em}
+svg{display:block;width:100%;height:auto;user-select:none;-webkit-user-select:none}
+#graph{border-radius:8px;background:var(--card)}
+#graph.drag{touch-action:none;cursor:ns-resize}
+.nlwrap{border-top:1px dashed var(--rule);padding-top:6px}
+.nlhead{font-size:12px;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}
+#nl .hit{cursor:pointer}
+#nl.locked .hit{cursor:default}
+
+/* svg classes */
+.g-minor{stroke:var(--grid);stroke-width:1}
+.g-major{stroke:var(--grid2);stroke-width:1}
+.axis{stroke:var(--ink);stroke-width:1.4}
+.tick{fill:var(--muted);font:500 11px var(--f-mono)}
+.curve{fill:none;stroke:var(--pen);stroke-width:2.6;stroke-linejoin:round;stroke-linecap:round}
+.curve-lab{fill:var(--pen);font:italic 14px var(--f-math);paint-order:stroke;stroke:var(--card);stroke-width:5px;stroke-linejoin:round}
+.kline{stroke:var(--red);stroke-width:2.4}
+.kline.ghost{stroke-dasharray:7 5}
+.klab{fill:var(--red);font:700 13px var(--f-mono)}
+.klab-bg{fill:var(--card);stroke:var(--red);stroke-width:1.2}
+.hplane{fill:var(--hi);fill-opacity:.16}
+.hcurve{fill:none;stroke:var(--hi);stroke-width:11;stroke-linecap:round;stroke-opacity:.95}
+.hover-curve{fill:none;stroke:var(--ink);stroke-opacity:.18;stroke-width:12;stroke-linecap:round}
+.hover-band{fill:var(--ink);fill-opacity:.05}
+.drop{stroke:var(--red);stroke-width:1.2;stroke-dasharray:3 4}
+.ipt{fill:var(--card);stroke:var(--red);stroke-width:2.2}
+.ilab{fill:var(--red);font:700 12px var(--f-mono)}
+.ilab-bg{fill:var(--card);fill-opacity:.9}
+.outdom{fill:url(#hatch)}
+.hatch-line{stroke:var(--grid2);stroke-width:1.2}
+
+.nl-axis{stroke:var(--ink);stroke-width:1.4}
+.seg{fill:var(--card2);stroke:var(--grid2);stroke-width:1.2}
+.seg.on{fill:var(--hi);stroke:var(--hi-ink);stroke-opacity:.35}
+.seg.bad{stroke:var(--bad);stroke-width:2.4;stroke-dasharray:5 3}
+.seg.hov{stroke:var(--ink);stroke-width:1.8}
+.pt{fill:var(--card);stroke:var(--ink);stroke-width:2.2}
+.pt.on{fill:var(--ink)}
+.pt.bad{stroke:var(--bad)}
+.pt-ring{fill:none;stroke:var(--bad);stroke-width:2;stroke-dasharray:3 2}
+.pt-fixed{fill:var(--card);stroke:var(--muted);stroke-width:1.6}
+.nl-lab{fill:var(--ink);font:700 11.5px var(--f-mono)}
+.nl-note{fill:var(--muted);font:12px var(--f-body)}
+.arrowhead{fill:var(--hi-ink);fill-opacity:.55}
+
+/* panel */
+.panel{display:flex;flex-direction:column;gap:12px;min-width:0}
+.method{list-style:none;margin:0;padding:12px 14px;background:var(--card);border:1px solid var(--rule);border-radius:14px;display:grid;gap:2px}
+.method h2{font-family:var(--f-display);font-weight:600;font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:0 0 4px}
+.method li{display:grid;grid-template-columns:24px 1fr;gap:8px;align-items:center;padding:4px 6px;border-radius:7px;color:var(--muted)}
+.method li .n{width:22px;height:22px;border-radius:50%;border:1.5px solid var(--rule);display:grid;place-items:center;font:700 11px var(--f-mono)}
+.method li.cur{background:var(--card2);color:var(--ink);font-weight:700}
+.method li.cur .n{border-color:var(--ink);background:var(--ink);color:var(--card)}
+.method li.done{color:var(--ink)}
+.method li.done .n{border-color:var(--good);background:var(--good);color:var(--card)}
+
+.task{background:var(--card);border:1px solid var(--rule);border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:12px}
+.kicker{margin:0;font-family:var(--f-display);font-weight:800;font-size:22px;line-height:1.15;letter-spacing:-.01em;text-wrap:balance}
+.task p{margin:0}
+.task .sub{color:var(--muted);font-size:14px}
+.opts{display:grid;gap:8px}
+.opt{text-align:left;background:var(--card2);border:1.5px solid var(--rule);border-radius:10px;padding:10px 12px;font-family:var(--f-math);font-size:17px;line-height:1.35}
+.opt:hover:not(:disabled){border-color:var(--ink)}
+.opt.wrong{border-color:var(--bad);background:var(--bad-bg);opacity:.75;cursor:not-allowed}
+.opt.right{border-color:var(--good);background:var(--good-bg)}
+.opt i{font-style:italic}
+.duo{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.duo .opt{font-family:var(--f-display);font-weight:600;font-size:17px;text-align:center;padding:14px 8px}
+.duo .opt svg{width:46px;margin:0 auto 6px}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.btn{border:1.5px solid var(--rule);background:var(--card2);border-radius:9px;padding:9px 14px;font-weight:700}
+.btn:hover{border-color:var(--ink)}
+.btn.primary{background:var(--ink);color:var(--card);border-color:var(--ink)}
+.btn.primary:hover{filter:brightness(1.15)}
+.nudge{display:flex;align-items:center;gap:6px}
+.nudge .btn{width:44px;padding:8px 0;font-family:var(--f-mono)}
+.nudge output{font:700 18px var(--f-mono);color:var(--red);min-width:110px;text-align:center;font-variant-numeric:tabular-nums}
+.fb{border-radius:10px;padding:10px 12px;font-size:14.5px}
+.fb.good{background:var(--good-bg);color:var(--ink);border-left:4px solid var(--good)}
+.fb.bad{background:var(--bad-bg);color:var(--ink);border-left:4px solid var(--bad)}
+.fb.info{background:var(--card2);border-left:4px solid var(--pen)}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:13px;color:var(--muted);align-items:center}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.sw{display:inline-block;width:22px;height:10px;border-radius:3px;background:var(--hi)}
+.dot{display:inline-block;width:12px;height:12px;border-radius:50%;border:2px solid var(--ink)}
+.dot.f{background:var(--ink)}
+.sol{border:1.5px solid var(--rule);border-radius:10px;padding:12px 14px;background:var(--card2);font-family:var(--f-math);font-size:17px;line-height:1.5}
+.sol i{font-style:italic}
+.sol b{background:var(--hi);color:var(--hi-ink);padding:0 4px;border-radius:3px;font-weight:600}
+.stars{font-size:26px;letter-spacing:4px;color:var(--ink)}
+.stars .off{opacity:.2}
+.why{font-size:14px;color:var(--muted)}
+.why i{font-family:var(--f-math)}
+
+footer{color:var(--muted);font-size:12.5px;max-width:80ch}
+
+/* end modal */
+.modal[hidden]{display:none}
+.modal{position:fixed;inset:0;background:rgba(6,14,20,.55);display:grid;place-items:center;padding:16px;z-index:10}
+.modal .card{background:var(--card);border:1px solid var(--rule);border-radius:16px;max-width:520px;width:100%;padding:22px;display:flex;flex-direction:column;gap:12px;max-height:90vh;overflow:auto}
+.modal h2{font-family:var(--f-display);font-weight:800;font-size:30px;margin:0;line-height:1.05}
+.modal ul{margin:0;padding-left:18px;display:grid;gap:6px}
+.big{font:700 34px var(--f-mono)}
+@keyframes pop{0%{transform:scale(.96);opacity:.4}100%{transform:none;opacity:1}}
+.task>*{animation:pop .22s ease-out both}
+@media (prefers-reduced-motion:reduce){.task>*{animation:none}}
+</style>
+
+<div class="app">
+  <header class="top">
+    <div class="brand">
+      <h1>Above the <span class="ln">Line</span></h1>
+      <p>Solve <span class="m"><i>f</i>(<i>x</i>) &gt; <i>k</i></span>, <span class="m"><i>f</i>(<i>x</i>) &lt; <i>k</i></span>, <span class="m"><i>f</i>(<i>x</i>) ≥ <i>k</i></span> and <span class="m"><i>f</i>(<i>x</i>) ≤ <i>k</i></span> by reading the graph of <span class="m"><i>y</i> = <i>f</i>(<i>x</i>)</span>. Draw the line, find where the curve sits, shade the answer.</p>
+    </div>
+    <div class="hud" aria-live="polite">
+      <div><span>Score</span><b id="score">0</b></div>
+      <div><span>Streak</span><b id="streak">0</b></div>
+      <div><span>Stars</span><b id="starsTot">0</b></div>
+    </div>
+  </header>
+
+  <nav class="rounds" id="roundNav" aria-label="Rounds"></nav>
+
+  <main class="stage">
+    <section class="board">
+      <div class="qhead"><span class="qtag" id="qtag">Warm-up</span><div class="ineq" id="ineq"></div></div>
+      <svg id="graph" viewBox="0 0 640 400" tabindex="0" aria-label="Graph of y = f(x)"></svg>
+      <div class="nlwrap">
+        <div class="nlhead"><span>Answer strip · the <i>x</i>-axis</span><span id="nlhint"></span></div>
+        <svg id="nl" viewBox="0 0 640 80" aria-label="Number line for the solution"></svg>
+      </div>
+    </section>
+    <aside class="panel">
+      <ol class="method" id="method"></ol>
+      <div class="task" id="task" aria-live="polite"></div>
+    </aside>
+  </main>
+
+  <footer>Built from Lesson Worksheet 22.3 (Set 2), Chapter 22 More about Graphs of Functions. Answers are read from the graph, correct to 1 decimal place unless the question says otherwise, so they can differ slightly from a hand-drawn reading.</footer>
+</div>
+
+<div class="modal" id="modal" hidden><div class="card" id="modalCard"></div></div>
+
+<script>
+(function(){
+let W=640,H=400;const PL=40,PR=14,PT=14,PB=28;
+const SIGN={'>':'&gt;','<':'&lt;','>=':'≥','<=':'≤'};
+const SIGNT={'>':'>','<':'<','>=':'≥','<=':'≤'};
+const deg=Math.PI/180;
+const X='<i>x</i>';
+
+const ROUNDS=[
+ {id:'W',tag:'Warm-up',lhs:`${X}<sup>2</sup> − 2${X} − 1`,f:x=>x*x-2*x-1,sign:'>',k:2,view:[-2,4.6,-3,6.5],tick:[1,1],minor:[.2,.5],snap:.5,dp:1,warm:true},
+ {id:'1a',tag:'Q1(a)',lhs:`3${X}<sup>2</sup> + 8${X} + 4`,f:x=>3*x*x+8*x+4,sign:'>',k:5,view:[-3.6,0.9,-2.2,8],tick:[1,2],minor:[.2,.5],snap:.5,dp:1},
+ {id:'1b',tag:'Q1(b)',lhs:`3${X}<sup>2</sup> + 8${X} + 4`,f:x=>3*x*x+8*x+4,sign:'<=',k:-1,view:[-3.6,0.9,-2.2,8],tick:[1,2],minor:[.2,.5],snap:.5,dp:1},
+ {id:'2a',tag:'Q2(a)',lhs:`(<sup>1</sup>⁄<sub>7</sub>)<sup><i>x</i></sup>`,f:x=>Math.pow(1/7,x),sign:'<',k:.7,view:[-1.4,1.8,-1,3.2],tick:[1,1],minor:[.1,.1],snap:.1,dp:1},
+ {id:'2b',tag:'Q2(b)',lhs:`(<sup>1</sup>⁄<sub>7</sub>)<sup><i>x</i></sup>`,f:x=>Math.pow(1/7,x),sign:'>=',k:-.5,view:[-1.4,1.8,-1,3.2],tick:[1,1],minor:[.1,.1],snap:.1,dp:1},
+ {id:'3a',tag:'Q3(a)',lhs:`log<sub>9</sub> ${X}`,f:x=>Math.log(x)/Math.log(9),dom:{lo:0,loOpen:true},sign:'>=',k:-1,view:[-.3,3.2,-1.6,1.15],tick:[1,.5],minor:[.1,.1],snap:.1,dp:1,
+   domNote:`log<sub>9</sub> ${X} is only defined for ${X} &gt; 0, so the strip starts at 0 (not included).`},
+ {id:'3b',tag:'Q3(b)',lhs:`log<sub>9</sub> ${X}`,f:x=>Math.log(x)/Math.log(9),dom:{lo:0,loOpen:true},sign:'<',k:.3,view:[-.3,3.2,-1.6,1.15],tick:[1,.5],minor:[.1,.1],snap:.1,dp:1,
+   domNote:`log<sub>9</sub> ${X} is only defined for ${X} &gt; 0, so 0 itself can never be part of the answer.`},
+ {id:'4a',tag:'Q4(a)',lhs:`−2 cos ${X}`,f:x=>-2*Math.cos(x*deg),dom:{lo:0,hi:360},degs:true,sign:'>',k:.8,view:[-25,385,-2.5,2.5],tick:[60,1],minor:[10,.2],snap:.1,dp:0,
+   domText:`for 0° ≤ ${X} ≤ 360°`,domNote:`The graph stops at 0° and 360°. Check those two end points as well.`},
+ {id:'4b',tag:'Q4(b)',lhs:`−2 cos ${X}`,f:x=>-2*Math.cos(x*deg),dom:{lo:0,hi:360},degs:true,sign:'<=',k:-1.2,view:[-25,385,-2.5,2.5],tick:[60,1],minor:[10,.2],snap:.1,dp:0,
+   domText:`for 0° ≤ ${X} ≤ 360°`,domNote:`The graph stops at 0° and 360°. Check those two end points as well.`},
+ {id:'5a',tag:'Q5(a)',lhs:`−2${X}<sup>2</sup> + 4${X} − 3`,f:x=>-2*x*x+4*x-3,sign:'<',k:-1,view:[-.8,2.8,-6,.8],tick:[1,1],minor:[.2,.2],snap:.5,dp:1,
+   touchNote:`At ${X} = 1.0 the curve only touches the line, so there <i>f</i>(${X}) equals −1 exactly.`},
+ {id:'5b',tag:'Q5(b)',lhs:`−2${X}<sup>2</sup> + 4${X} − 3`,f:x=>-2*x*x+4*x-3,sign:'>=',k:-1,view:[-.8,2.8,-6,.8],tick:[1,1],minor:[.2,.2],snap:.5,dp:1,
+   touchNote:`At ${X} = 1.0 the curve only touches the line, so there <i>f</i>(${X}) equals −1 exactly.`},
+ {id:'6a',tag:'Q6(a)',lhs:`−${X}<sup>3</sup> − 2${X}<sup>2</sup> + 4${X} + 2`,f:x=>-x*x*x-2*x*x+4*x+2,sign:'>',k:-6,view:[-3.6,2.8,-10,9],tick:[1,5],minor:[.2,1],snap:1,dp:1,
+   touchNote:`At ${X} = −2.0 the curve touches the line and turns back, so there the value equals −6 exactly.`},
+ {id:'6b',tag:'Q6(b)',lhs:`−${X}<sup>3</sup> − 2${X}<sup>2</sup> + 4${X} + 2`,f:x=>-x*x*x-2*x*x+4*x+2,sign:'<=',k:-6,view:[-3.6,2.8,-10,9],tick:[1,5],minor:[.2,1],snap:1,dp:1,
+   touchNote:`At ${X} = −2.0 the curve touches the line and turns back, so there the value equals −6 exactly.`},
+ {id:'7',tag:'Q7',lhs:`<i>f</i>(${X})`,label:'y = f(x)',f:x=>Math.pow(8.3,x),sign:'<=',k:4.4,view:[-1.5,1.3,-.7,6.2],tick:[.5,1],minor:[.1,.2],snap:.1,dp:2,
+   orig:`5 <i>f</i>(${X}) ≤ 22`,
+   rw:[{q:`The line must be <span class="m"><i>y</i> = <i>k</i></span>, so first get <span class="m"><i>f</i>(<i>x</i>)</span> alone. Rewrite <span class="m">5 <i>f</i>(<i>x</i>) ≤ 22</span> as <span class="m"><i>f</i>(<i>x</i>) ≤ <i>k</i></span>.`,
+     opts:[{t:`<i>f</i>(${X}) ≤ 4.4`,ok:1,why:`Divide both sides by 5: 22 ÷ 5 = 4.4. Dividing by a positive number keeps ≤.`},
+           {t:`<i>f</i>(${X}) ≤ 17`,why:`The 5 multiplies <i>f</i>(<i>x</i>), so divide both sides by 5 instead of subtracting.`},
+           {t:`<i>f</i>(${X}) ≥ 4.4`,why:`Dividing by a positive number does not flip the inequality sign.`},
+           {t:`<i>f</i>(${X}) ≤ 110`,why:`Undo “× 5” by dividing by 5, not multiplying.`}]}]},
+ {id:'8',tag:'Q8',lhs:`sin (−2${X})`,f:x=>Math.sin(-2*x*deg),dom:{lo:0,hi:360},degs:true,sign:'>',k:-.6,view:[-25,385,-1.45,1.45],tick:[60,1],minor:[10,.1],snap:.1,dp:0,
+   domText:`for 0° ≤ ${X} ≤ 360°`,orig:`5 sin (−2${X}) + 3 &gt; 0`,domNote:`The graph stops at 0° and 360°. Check those two end points as well.`,
+   rw:[{q:`Rewrite <span class="m">5 sin (−2<i>x</i>) + 3 &gt; 0</span> as <span class="m">sin (−2<i>x</i>) &gt; <i>k</i></span>.`,
+     opts:[{t:`sin (−2${X}) &gt; −0.6`,ok:1,why:`Subtract 3: 5 sin (−2<i>x</i>) &gt; −3. Divide by 5: sin (−2<i>x</i>) &gt; −0.6.`},
+           {t:`sin (−2${X}) &gt; 0.6`,why:`Moving +3 to the other side makes it −3, so the result is negative.`},
+           {t:`sin (−2${X}) &lt; −0.6`,why:`You divided by +5, which does not flip the sign.`},
+           {t:`sin (−2${X}) &gt; −3`,why:`Nearly there: you still need to divide both sides by 5.`}]}]},
+ {id:'9',tag:'Q9 · Try more',lhs:`<i>f</i>(${X})`,label:'y = f(x)',f:x=>x*x*x-10*x+5,dom:{lo:-4,hi:3.8},sign:'>',k:-9,view:[-4.6,4.4,-22,22],tick:[1,5],minor:[.2,1],snap:1,dp:1,
+   domText:`for −4 ≤ ${X} ≤ 3.8`,orig:`5${X} − ½${X}<sup>3</sup> &lt; <i>k</i> − 3`,domNote:`The graph is only drawn for −4 ≤ <i>x</i> ≤ 3.8. Check both end points.`,
+   rw:[{q:`<span class="m"><i>f</i>(<i>x</i>) = <i>x</i><sup>3</sup> − <i>kx</i> + 5</span> and <span class="m"><i>f</i>(−3) = 8</span>. Find <span class="m"><i>k</i></span>.`,
+     opts:[{t:`<i>k</i> = 10`,ok:1,why:`(−3)<sup>3</sup> − <i>k</i>(−3) + 5 = 8 → −22 + 3<i>k</i> = 8 → <i>k</i> = 10.`},
+           {t:`<i>k</i> = −10`,why:`−<i>k</i>(−3) = +3<i>k</i>. So −27 + 3<i>k</i> + 5 = 8.`},
+           {t:`<i>k</i> = 4`,why:`(−3)<sup>3</sup> = −27, not −9. Try the substitution again.`}]},
+       {q:`With <span class="m"><i>k</i> = 10</span>, solve <span class="m">5<i>x</i> − ½<i>x</i><sup>3</sup> &lt; 7</span>. Rewrite it in terms of <span class="m"><i>f</i>(<i>x</i>) = <i>x</i><sup>3</sup> − 10<i>x</i> + 5</span>.`,
+     opts:[{t:`<i>f</i>(${X}) &gt; −9`,ok:1,why:`× (−2): <i>x</i><sup>3</sup> − 10<i>x</i> &gt; −14 (the sign flips). Add 5: <i>f</i>(<i>x</i>) &gt; −9.`},
+           {t:`<i>f</i>(${X}) &lt; −9`,why:`Multiplying both sides by a negative number (−2) flips the inequality sign.`},
+           {t:`<i>f</i>(${X}) &gt; −14`,why:`After × (−2) you have <i>x</i><sup>3</sup> − 10<i>x</i> &gt; −14. Add 5 to both sides to build <i>f</i>(<i>x</i>).`}]}]}
+];
+ROUNDS.forEach(r=>{if(!r.label) r.label=null; r.dom=r.dom||{};});
+
+/* ---------- state ---------- */
+const store={get(){try{return JSON.parse(localStorage.getItem('atl-v1')||'null')}catch(e){return null}},set(v){try{localStorage.setItem('atl-v1',JSON.stringify(v))}catch(e){}}};
+let S={idx:0,results:{},score:0,streak:0};
+let R,EL=[],ROOTS=[],P; // P = per-round play state
+const saved=store.get(); if(saved&&saved.results){S.results=saved.results;S.score=saved.score||0;S.streak=saved.streak||0;S.idx=Math.min(saved.idx||0,ROUNDS.length-1);}
+function persist(){store.set({results:S.results,score:S.score,streak:S.streak,idx:S.idx});}
+
+/* ---------- maths helpers ---------- */
+const g=x=>R.f(x)-R.k;
+function cmp(v){if(Math.abs(v)<1e-6)v=0;switch(R.sign){case'>':return v>0;case'<':return v<0;case'>=':return v>=0;default:return v<=0;}}
+function findRoots(a,b){
+  const N=8000,h=(b-a)/N,xs=[],gs=[],out=[];
+  for(let i=0;i<=N;i++){const x=a+i*h;xs.push(x);gs.push(g(x));}
+  for(let i=0;i<N;i++){const g0=gs[i],g1=gs[i+1];if(!isFinite(g0)||!isFinite(g1))continue;
+    if(g0===0){out.push(xs[i]);continue;}
+    if(g0*g1<0){let lo=xs[i],hi=xs[i+1],gl=g0;for(let k=0;k<80;k++){const m=(lo+hi)/2,gm=g(m);if(gm===0){lo=hi=m;break}if(gl*gm<0)hi=m;else{lo=m;gl=gm}}out.push((lo+hi)/2);}}
+  for(let i=1;i<N;i++){const a0=Math.abs(gs[i-1]),a1=Math.abs(gs[i]),a2=Math.abs(gs[i+1]);
+    if(a1<=a0&&a1<=a2&&a1<1e-3&&gs[i-1]*gs[i+1]>0){let lo=xs[i-1],hi=xs[i+1];for(let k=0;k<120;k++){const m1=lo+(hi-lo)/3,m2=hi-(hi-lo)/3;if(Math.abs(g(m1))<Math.abs(g(m2)))hi=m2;else lo=m1;}const m=(lo+hi)/2;if(Math.abs(g(m))<1e-7)out.push(m);}}
+  out.sort((p,q)=>p-q);return out.filter((x,i)=>i===0||x-out[i-1]>1e-4);
+}
+function buildElements(){
+  const d=R.dom,L=d.lo??-Infinity,U=d.hi??Infinity;
+  const a=isFinite(L)?L+(d.loOpen?1e-7:0):R.view[0],b=isFinite(U)?U:R.view[1];
+  ROOTS=findRoots(a,b);
+  const B=[];
+  if(isFinite(L)&&!d.loOpen)B.push({x:L,end:true});
+  ROOTS.forEach(x=>{if(!B.some(p=>Math.abs(p.x-x)<1e-6))B.push({x,end:false})});
+  if(isFinite(U)&&!B.some(p=>Math.abs(p.x-U)<1e-6))B.push({x:U,end:true});
+  B.sort((p,q)=>p.x-q.x);
+  EL=[];let prev=L;
+  B.forEach(p=>{if(p.x>prev+1e-9)EL.push({t:'seg',a:prev,b:p.x});EL.push({t:'pt',x:p.x,end:p.end});prev=p.x;});
+  if(U>prev+1e-9)EL.push({t:'seg',a:prev,b:U});
+  EL.forEach(e=>{
+    if(e.t==='pt'){e.ok=cmp(g(e.x));e.touch=!e.end&&isTouch(e.x);}
+    else{const tx=(!isFinite(e.a)&&!isFinite(e.b))?0:!isFinite(e.a)?e.b-0.5:!isFinite(e.b)?e.a+0.5:(e.a+e.b)/2;e.ok=cmp(g(tx));}
+  });
+}
+function isTouch(x){const h=1e-3*(R.view[1]-R.view[0]);return g(x-h)*g(x+h)>0;}
+function isBound(x){const d=R.dom;return (d.lo!=null&&Math.abs(x-d.lo)<1e-9)||(d.hi!=null&&Math.abs(x-d.hi)<1e-9);}
+function num(x,dp){let s=(Math.abs(x)<0.5*Math.pow(10,-dp)?0:x).toFixed(dp);return s.replace('-','−');}
+function lab(x){const u=R.degs?'°':'';if(isBound(x))return String(x).replace('-','−')+u;return num(x,R.dp)+u;}
+function kTxt(k){return String(k).replace('-','−');}
+
+/* selection -> written answer */
+function intervals(sel){
+  const out=[];let cur=null;
+  EL.forEach((e,i)=>{
+    if(sel[i]){
+      if(!cur)cur=e.t==='seg'?{lo:e.a,loI:false,hi:e.b,hiI:false,ex:[]}:{lo:e.x,loI:true,hi:e.x,hiI:true,ex:[]};
+      else{cur.hi=e.t==='seg'?e.b:e.x;cur.hiI=e.t==='pt';}
+    }else if(cur){out.push(cur);cur=null;}
+  });
+  if(cur)out.push(cur);
+  // merge pieces split by a single excluded point
+  const m=[];out.forEach(iv=>{const last=m[m.length-1];if(last&&!last.hiI&&!iv.loI&&Math.abs(last.hi-iv.lo)<1e-9&&last.lo!==last.hi&&iv.lo!==iv.hi){last.ex.push(last.hi);last.hi=iv.hi;last.hiI=iv.hiI;}else m.push({...iv,ex:[...iv.ex]});});
+  return m;
+}
+function ivText(iv){
+  let s;const a=lab(iv.lo),b=lab(iv.hi);
+  if(iv.lo===iv.hi)s=`x = ${a}`;
+  else if(!isFinite(iv.lo)&&!isFinite(iv.hi))s='all real values of x';
+  else if(!isFinite(iv.lo))s=`x ${iv.hiI?'≤':'<'} ${b}`;
+  else if(!isFinite(iv.hi))s=`x ${iv.loI?'≥':'>'} ${a}`;
+  else s=`${a} ${iv.loI?'≤':'<'} x ${iv.hiI?'≤':'<'} ${b}`;
+  if(iv.ex.length){s=(s==='all real values of x'?s:s)+' except '+iv.ex.map(x=>`x = ${lab(x)}`).join(' and ');}
+  return s;
+}
+function selText(sel,joiner=' or '){const iv=intervals(sel);if(!iv.length)return'no real values of x';return iv.map(ivText).join(joiner);}
+const mathify=s=>s.replace(/\bx\b/g,'<i>x</i>');
+
+/* ---------- geometry ---------- */
+const v=()=>R.view;
+const sx=x=>PL+(x-v()[0])/(v()[1]-v()[0])*(W-PL-PR);
+const sy=y=>PT+(v()[3]-y)/(v()[3]-v()[2])*(H-PT-PB);
+const iy=py=>v()[3]-(py-PT)/(H-PT-PB)*(v()[3]-v()[2]);
+function snapY(y){const s=R.snap;return Math.round(y/s)*s;}
+function curvePath(a,b){
+  const d=R.dom;let lo=Math.max(a,v()[0],d.lo??-Infinity),hi=Math.min(b,v()[1],d.hi??Infinity);
+  if(d.loOpen&&lo<=d.lo)lo=d.lo+1e-4;
+  if(hi<=lo)return'';
+  const n=Math.max(20,Math.ceil((hi-lo)/(v()[1]-v()[0])*700)),yr=v()[3]-v()[2];let p='',pen=false;
+  for(let i=0;i<=n;i++){const x=lo+(hi-lo)*i/n;let y=R.f(x);if(!isFinite(y)){pen=false;continue}y=Math.max(v()[2]-3*yr,Math.min(v()[3]+3*yr,y));p+=(pen?'L':'M')+sx(x).toFixed(1)+' '+sy(y).toFixed(1);pen=true;}
+  return p;
+}
+function tickLabel(t,step){const dp=step<1?(String(step).split('.')[1]||'').length:0;return num(t,dp).replace(/^−0$/,'0');}
+
+/* ---------- graph rendering ---------- */
+const graph=document.getElementById('graph'),nl=document.getElementById('nl');
+function measure(){const bw=document.querySelector('.board').clientWidth-28;W=Math.round(Math.max(320,Math.min(640,bw||640)));H=Math.round(W<520?W*0.78:W*0.625);graph.setAttribute('viewBox',`0 0 ${W} ${H}`);nl.setAttribute('viewBox',`0 0 ${W} 80`);}
+function drawStatic(){
+  measure();
+  const [x0,x1,y0,y1]=v(),[tx,ty]=R.tick,[mx,my]=R.minor;let s='';
+  s+=`<defs><clipPath id="plot"><rect x="${PL}" y="${PT}" width="${W-PL-PR}" height="${H-PT-PB}"/></clipPath>
+  <pattern id="hatch" width="7" height="7" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="7" class="hatch-line"/></pattern></defs>`;
+  s+=`<rect x="${PL}" y="${PT}" width="${W-PL-PR}" height="${H-PT-PB}" fill="var(--card)"/>`;
+  for(let x=Math.ceil(x0/mx)*mx;x<=x1+1e-9;x+=mx)s+=`<line class="${Math.abs(x/tx-Math.round(x/tx))<1e-6?'g-major':'g-minor'}" x1="${sx(x)}" x2="${sx(x)}" y1="${PT}" y2="${H-PB}"/>`;
+  for(let y=Math.ceil(y0/my)*my;y<=y1+1e-9;y+=my)s+=`<line class="${Math.abs(y/ty-Math.round(y/ty))<1e-6?'g-major':'g-minor'}" y1="${sy(y)}" y2="${sy(y)}" x1="${PL}" x2="${W-PR}"/>`;
+  // out of domain hatch
+  const d=R.dom;
+  if(d.lo!=null&&d.lo>x0)s+=`<rect class="outdom" x="${PL}" y="${PT}" width="${sx(d.lo)-PL}" height="${H-PT-PB}"/>`;
+  if(d.hi!=null&&d.hi<x1)s+=`<rect class="outdom" x="${sx(d.hi)}" y="${PT}" width="${W-PR-sx(d.hi)}" height="${H-PT-PB}"/>`;
+  const ax=Math.min(Math.max(sy(0),PT),H-PB),ay=Math.min(Math.max(sx(0),PL),W-PR);
+  s+=`<line class="axis" x1="${PL}" x2="${W-PR}" y1="${ax}" y2="${ax}"/><path d="M${W-PR} ${ax} l-8 -4 v8z" fill="var(--ink)"/><text class="tick" x="${W-PR-4}" y="${ax-8}" text-anchor="end" font-style="italic">x</text>`;
+  s+=`<line class="axis" x1="${ay}" x2="${ay}" y1="${PT}" y2="${H-PB}"/><path d="M${ay} ${PT} l-4 8 h8z" fill="var(--ink)"/><text class="tick" x="${ay+7}" y="${PT+10}" font-style="italic">y</text>`;
+  for(let x=Math.ceil(x0/tx)*tx;x<=x1+1e-9;x+=tx){if(Math.abs(x)<1e-9)continue;s+=`<line class="axis" x1="${sx(x)}" x2="${sx(x)}" y1="${ax-3}" y2="${ax+3}"/><text class="tick" x="${sx(x)}" y="${ax+15}" text-anchor="middle">${tickLabel(x,tx)}${R.degs?'°':''}</text>`;}
+  for(let y=Math.ceil(y0/ty)*ty;y<=y1+1e-9;y+=ty){if(Math.abs(y)<1e-9)continue;s+=`<line class="axis" x1="${ay-3}" x2="${ay+3}" y1="${sy(y)}" y2="${sy(y)}"/><text class="tick" x="${ay-6}" y="${sy(y)+4}" text-anchor="end">${tickLabel(y,ty)}</text>`;}
+  s+=`<text class="tick" x="${ay-6}" y="${ax+15}" text-anchor="end">0</text>`;
+  s+=`<g clip-path="url(#plot)"><g id="gTint"></g><g id="gHi"></g><path class="curve" d="${curvePath(-1e9,1e9)}"/></g>`;
+  const label=R.label?`y = f(x)`:null;
+  s+=`<text class="curve-lab" x="${W-PR-8}" y="${PT+18}" text-anchor="end">${label?'<tspan font-style="italic">y</tspan> = <tspan font-style="italic">f</tspan>(<tspan font-style="italic">x</tspan>)':'<tspan font-style="italic">y</tspan> = '+R.lhs.replace(/<sup>(.*?)<\/sup>/g,'<tspan baseline-shift="super" font-size="10">$1</tspan>').replace(/<sub>(.*?)<\/sub>/g,'<tspan baseline-shift="sub" font-size="10">$1</tspan>').replace(/<i>(.*?)<\/i>/g,'<tspan font-style="italic">$1</tspan>')}</text>`;
+  s+=`<g id="gTop"></g>`;
+  graph.innerHTML=s;
+}
+const phaseIdx=p=>['rw','line','ab','shade','write','done'].indexOf(p);
+function drawDynamic(){
+  const tint=graph.querySelector('#gTint'),hi=graph.querySelector('#gHi'),top=graph.querySelector('#gTop');
+  let t='',h='',o='';
+  const pi=phaseIdx(P.phase),locked=pi>=2,ky=sy(R.k);
+  if(pi>=3){const above=R.sign[0]==='>';t+=above?`<rect class="hplane" x="${PL}" y="${PT}" width="${W-PL-PR}" height="${Math.max(0,ky-PT)}"/>`:`<rect class="hplane" x="${PL}" y="${ky}" width="${W-PL-PR}" height="${Math.max(0,H-PB-ky)}"/>`;}
+  if(P.hover!=null&&P.phase==='shade'){const e=EL[P.hover];if(e.t==='seg'){const a=isFinite(e.a)?e.a:v()[0],b=isFinite(e.b)?e.b:v()[1];h+=`<rect class="hover-band" x="${sx(a)}" y="${PT}" width="${sx(b)-sx(a)}" height="${H-PT-PB}"/><path class="hover-curve" d="${curvePath(a,b)}"/>`;}}
+  if(P.solved){intervals(EL.map(e=>e.ok)).forEach(iv=>{const a=isFinite(iv.lo)?iv.lo:-1e9,b=isFinite(iv.hi)?iv.hi:1e9;if(iv.lo===iv.hi){h+=`<circle cx="${sx(iv.lo)}" cy="${sy(R.f(iv.lo))}" r="9" fill="var(--hi)"/>`;}else h+=`<path class="hcurve" d="${curvePath(a,b)}"/>`;});}
+  // k line
+  const ly=locked?R.k:P.lineY,py=sy(ly);
+  if(py>=PT-1&&py<=H-PB+1){
+    o+=`<line class="kline ${locked?'':'ghost'}" x1="${PL}" x2="${W-PR}" y1="${py}" y2="${py}"/>`;
+    const txt=`y = ${num(ly,R.snap<1?1:0).replace(/\.0$/,'')===num(ly,R.snap<1?1:0)?num(ly,R.snap<1?1:0):num(ly,R.snap<1?1:0)}`;
+    const lt=locked?`y = ${kTxt(R.k)}`:`y = ${num(ly,R.snap<1?1:0)}`;
+    const bw=lt.length*8+16,bx=PL+8,by=py-(py-PT<30?-8:30);
+    o+=`<rect class="klab-bg" x="${bx}" y="${by}" width="${bw}" height="22" rx="5"/><text class="klab" x="${bx+8}" y="${by+15}">${lt}</text>`;
+    if(!locked)o+=`<g transform="translate(${W-PR-22},${py})"><circle r="13" fill="var(--red)"/><path d="M0 -8 l-4 5 h8z M0 8 l-4 -5 h8z" fill="var(--card)"/></g>`;
+  }
+  if(locked){
+    const ax=Math.min(Math.max(sy(0),PT),H-PB);
+    ROOTS.forEach(x=>{if(x<v()[0]||x>v()[1])return;const px=sx(x);
+      o+=`<line class="drop" x1="${px}" x2="${px}" y1="${ky}" y2="${ax}"/><circle class="ipt" cx="${px}" cy="${ky}" r="5"/>`;
+      const l=lab(x),bw=l.length*7.4+8,ly2=ax+(ky<ax?-22:6);
+      o+=`<rect class="ilab-bg" x="${px-bw/2}" y="${ly2}" width="${bw}" height="16" rx="3"/><text class="ilab" x="${px}" y="${ly2+12}" text-anchor="middle">${l}</text>`;});
+  }
+  tint.innerHTML=t;hi.innerHTML=h;top.innerHTML=o;
+  graph.classList.toggle('drag',P.phase==='line');
+}
+
+/* ---------- number line ---------- */
+function drawNL(){
+  const y=34;let s=`<defs><pattern id="hatch2" width="7" height="7" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="7" class="hatch-line"/></pattern></defs>`;
+  const d=R.dom;
+  if(d.lo!=null&&d.lo>v()[0])s+=`<rect x="${PL}" y="${y-14}" width="${sx(d.lo)-PL}" height="28" fill="url(#hatch2)"/>`;
+  if(d.hi!=null&&d.hi<v()[1])s+=`<rect x="${sx(d.hi)}" y="${y-14}" width="${W-PR-sx(d.hi)}" height="28" fill="url(#hatch2)"/>`;
+  s+=`<line class="nl-axis" x1="${PL}" x2="${W-PR}" y1="${y}" y2="${y}"/><path d="M${W-PR} ${y} l-8 -4 v8z" fill="var(--ink)"/>`;
+  const pi=phaseIdx(P.phase);
+  if(pi<3){
+    s+=`<text class="nl-note" x="${(PL+W-PR)/2}" y="${y+30}" text-anchor="middle">${pi<2?'Draw the line y = k first. The crossing points will mark the strip.':'Decide above or below, then shade here.'}</text>`;
+    if(pi===2){EL.filter(e=>e.t==='pt').forEach(e=>{s+=`<circle class="pt-fixed" cx="${sx(e.x)}" cy="${y}" r="4"/>`;});}
+    nl.innerHTML=s;nl.classList.add('locked');return;
+  }
+  const interactive=P.phase==='shade';nl.classList.toggle('locked',!interactive);
+  if(d.loOpen){s+=`<circle class="pt-fixed" cx="${sx(d.lo)}" cy="${y}" r="6"/><text class="nl-lab" x="${sx(d.lo)}" y="${y+30}" text-anchor="middle">${lab(d.lo)}</text>`;}
+  const sel=P.sel;
+  EL.forEach((e,i)=>{if(e.t!=='seg')return;
+    const a=isFinite(e.a)?sx(e.a):PL,b=isFinite(e.b)?sx(e.b):W-PR-2;
+    const cls=['seg',sel[i]?'on':'',P.bad.has(i)?'bad':'',P.hover===i?'hov':''].join(' ');
+    s+=`<g class="hit" data-i="${i}"><rect x="${a}" y="${y-18}" width="${Math.max(2,b-a)}" height="36" fill="transparent"/><rect class="${cls}" x="${a+1}" y="${y-8}" width="${Math.max(1,b-a-2)}" height="16" rx="4"/>`;
+    if(sel[i]&&!isFinite(e.b))s+=`<path class="arrowhead" d="M${b-2} ${y} l-10 -8 v16z"/>`;
+    if(sel[i]&&!isFinite(e.a))s+=`<path class="arrowhead" d="M${a+2} ${y} l10 -8 v16z"/>`;
+    s+=`</g>`;});
+  EL.forEach((e,i)=>{if(e.t!=='pt')return;const px=sx(e.x);
+    s+=`<g class="hit" data-i="${i}"><circle cx="${px}" cy="${y}" r="15" fill="transparent"/><circle class="pt ${sel[i]?'on':''} ${P.bad.has(i)?'bad':''}" cx="${px}" cy="${y}" r="7.5"/>${P.bad.has(i)?`<circle class="pt-ring" cx="${px}" cy="${y}" r="13"/>`:''}</g>`;
+    s+=`<text class="nl-lab" x="${px}" y="${y+30}" text-anchor="middle">${lab(e.x)}</text>`;});
+  nl.innerHTML=s;
+}
+
+/* ---------- panel ---------- */
+const task=document.getElementById('task'),method=document.getElementById('method');
+function ineqHTML(){
+  let s='';const base=`${R.lhs} ${SIGN[R.sign]} ${kTxt(R.k)}`;
+  if(R.orig){s=`<span>${R.orig}</span>`;if(P.rwDone)s+=`<span class="arrow">⇒</span><span>${base}</span>`;}
+  else s=`<span>${base}</span>`;
+  if(R.domText)s+=` <span class="dom">${R.domText}</span>`;
+  return s;
+}
+const base=()=>`<span class="m">${R.lhs} ${SIGN[R.sign]} ${kTxt(R.k)}</span>`;
+function drawMethod(){
+  const steps=[];if(R.rw)steps.push(['rw','Rewrite as f(x) ? k']);
+  steps.push(['line','Draw the line y = k'],['ab','Above or below the line?'],['shade','Shade the x-values, mark the ends'],['write','Write the solution']);
+  const pi=phaseIdx(P.phase);
+  method.innerHTML=`<h2>The graphical method</h2>`+steps.map((st,i)=>{const si=phaseIdx(st[0]);const c=si<pi?'done':si===pi?'cur':'';return `<li class="${c}"><span class="n">${si<pi?'✓':i+1}</span><span>${st[1].replace('f(x)','<span class="m"><i>f</i>(<i>x</i>)</span>').replace('y = k','<span class="m"><i>y</i> = <i>k</i></span>')}</span></li>`}).join('');
+}
+function fbHTML(){return P.fb?`<div class="fb ${P.fb.type}">${P.fb.html}</div>`:'';}
+function drawTask(){
+  let s='';const ph=P.phase;
+  if(ph==='rw'){const q=R.rw[P.rwStep];
+    s+=`<p class="kicker">Get it into the form <span class="m"><i>f</i>(<i>x</i>) ? <i>k</i></span></p><p>${q.q}</p><div class="opts">${P.rwOpts.map((o,i)=>`<button class="opt ${P.rwWrong.has(i)?'wrong':''}" data-act="rw" data-i="${i}" ${P.rwWrong.has(i)?'disabled':''}>${o.t}</button>`).join('')}</div>`;
+    if(R.rw.length>1)s+=`<p class="sub">Part ${P.rwStep+1} of ${R.rw.length}</p>`;
+  }
+  if(ph==='line'){
+    s+=`<p class="kicker">Draw the line <span class="m"><i>y</i> = <i>k</i></span></p>
+    <p>To solve ${base()}, put the horizontal line <span class="m"><i>y</i> = <i>k</i></span> on the same axes as the curve. Drag on the graph, or use the arrows.</p>
+    <div class="row"><div class="nudge"><button class="btn" data-act="dn" aria-label="Move line down">▼</button><output id="lineOut">y = ${num(P.lineY,R.snap<1?1:0)}</output><button class="btn" data-act="up" aria-label="Move line up">▲</button></div><button class="btn primary" data-act="lock">Lock in line</button></div>`;
+    if(R.warm&&!P.fb)s+=`<div class="fb info">Warm-up. The right-hand side of the inequality tells you which horizontal line to draw.</div>`;
+  }
+  if(ph==='ab'){
+    const eq=R.sign.length>1;
+    s+=`<p class="kicker">Above or below?</p><p>For ${base()}, where must the curve be compared with the red line <span class="m"><i>y</i> = ${kTxt(R.k)}</span>?</p>
+    <div class="duo"><button class="opt ${P.abWrong==='above'?'wrong':''}" data-act="ab" data-v="above" ${P.abWrong==='above'?'disabled':''}><svg viewBox="0 0 46 30"><line x1="2" x2="44" y1="20" y2="20" stroke="var(--red)" stroke-width="2.4"/><path d="M4 26 Q23 -14 42 26" fill="none" stroke="var(--pen)" stroke-width="2.4"/></svg>Above the line${eq?' (or on it)':''}</button>
+    <button class="opt ${P.abWrong==='below'?'wrong':''}" data-act="ab" data-v="below" ${P.abWrong==='below'?'disabled':''}><svg viewBox="0 0 46 30"><line x1="2" x2="44" y1="10" y2="10" stroke="var(--red)" stroke-width="2.4"/><path d="M4 4 Q23 44 42 4" fill="none" stroke="var(--pen)" stroke-width="2.4"/></svg>Below the line${eq?' (or on it)':''}</button></div>`;
+  }
+  if(ph==='shade'){
+    const above=R.sign[0]==='>';
+    s+=`<p class="kicker">Shade where the curve is ${above?'above':'below'} the line</p>
+    <p>Tap pieces of the answer strip to shade the <span class="m"><i>x</i></span>-values where the curve is in the tinted zone. Tap each point to choose <b>included</b> or <b>not included</b>.</p>
+    <div class="legend"><span><i class="sw"></i>shaded = solution</span><span><i class="dot f"></i>included (≥, ≤)</span><span><i class="dot"></i>not included (&gt;, &lt;)</span></div>
+    <div class="row"><button class="btn primary" data-act="check">Check my answer</button><button class="btn" data-act="clear">Clear</button>${P.shadeTries>=2?'<button class="btn" data-act="reveal">Show me</button>':''}</div>`;
+  }
+  if(ph==='write'){
+    s+=`<p class="kicker">Write the solution</p><p>Your shading is right. Which statement says the same thing?</p>
+    <div class="opts">${P.wOpts.map((o,i)=>`<button class="opt ${P.wWrong.has(i)?'wrong':''}" data-act="w" data-i="${i}" ${P.wWrong.has(i)?'disabled':''}>${mathify(o.t)}</button>`).join('')}</div>`;
+  }
+  if(ph==='done'){
+    const res=S.results[R.id];const st=res?res.stars:1;
+    const ans=mathify(selText(EL.map(e=>e.ok)));const above=R.sign[0]==='>';
+    const orig=R.orig?R.orig:`${R.lhs} ${SIGN[R.sign]} ${kTxt(R.k)}`;
+    s+=`<p class="kicker">Round cleared</p><div class="stars" aria-label="${P.earned} of 3 stars">${'★'.repeat(P.earned)}<span class="off">${'★'.repeat(3-P.earned)}</span></div>
+    <div class="sol">∴ The solutions of ${orig}${R.domText?' '+R.domText:''} are <b>${ans}</b>${R.dp===2?' (cor. to 2 d.p.)':R.degs?'':' (cor. to 1 d.p.)'}.</div>
+    <p class="why">${whyText(above)}</p>
+    <div class="row"><button class="btn primary" data-act="next">${S.idx<ROUNDS.length-1?'Next round →':'See results'}</button><button class="btn" data-act="replay">Replay round</button></div>`;
+  }
+  task.innerHTML=s+(ph!=='done'?fbHTML():'');
+}
+function whyText(above){
+  const eq=R.sign.length>1;let t=`These are the <i>x</i>-values where the curve lies <b>${above?'above':'below'}</b> the line <i>y</i> = ${kTxt(R.k)}`;
+  t+=eq?`, plus the points where it meets the line, because the sign is ${SIGNT[R.sign]}.`:`. The meeting points are left out, because the sign is ${SIGN[R.sign]}.`;
+  if(R.touchNote)t+=' '+R.touchNote;
+  if(R.domNote)t+=' '+R.domNote;
+  return t;
+}
+
+/* ---------- flow ---------- */
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+function startRound(i,keep){
+  S.idx=i;R=ROUNDS[i];persist();
+  P={phase:R.rw?'rw':'line',rwStep:0,rwDone:!R.rw,rwWrong:new Set(),rwOpts:[],lineY:0,mist:0,fb:null,abWrong:null,sel:[],bad:new Set(),hover:null,shadeTries:0,revealed:false,solved:false,wOpts:[],wWrong:new Set(),pts:0,earned:0};
+  if(keep)Object.assign(P,keep,{rwWrong:new Set(keep.rwWrong||[]),bad:new Set(keep.bad||[]),wWrong:new Set(keep.wWrong||[])});
+  buildElements();
+  if(!keep){P.sel=EL.map(()=>false);
+    let y0=snapY(R.view[2]+(R.view[3]-R.view[2])*0.82);if(Math.abs(y0-R.k)<R.snap/2)y0=snapY(R.view[2]+(R.view[3]-R.view[2])*0.2);P.lineY=y0;
+    if(R.rw)P.rwOpts=shuffle(R.rw[0].opts.slice());
+  }
+  drawStatic();renderAll();
+}
+function renderAll(){
+  document.getElementById('qtag').textContent=R.tag;
+  document.getElementById('ineq').innerHTML=ineqHTML();
+  document.getElementById('nlhint').textContent=P.phase==='shade'?'tap to shade · tap points to fill':'';
+  drawDynamic();drawNL();drawMethod();drawTask();drawNav();drawHud();
+}
+function drawHud(){
+  document.getElementById('score').textContent=S.score;
+  document.getElementById('streak').textContent=S.streak;
+  const tot=Object.values(S.results).reduce((a,r)=>a+r.stars,0);
+  document.getElementById('starsTot').textContent=`${tot}/${ROUNDS.length*3}`;
+}
+function drawNav(){
+  document.getElementById('roundNav').innerHTML=ROUNDS.map((r,i)=>{const res=S.results[r.id];return `<button class="chip ${i===S.idx?'cur':''} ${res?'done':''}" data-round="${i}" aria-label="${r.tag}${res?', '+res.stars+' stars':''}">${r.id}<small>${res?'★'.repeat(res.stars):''}</small></button>`}).join('');
+}
+function setFb(type,html){P.fb={type,html};}
+function miss(){P.mist++;}
+function award(n){P.pts+=n;}
+function go(phase){P.phase=phase;P.fb=null;renderAll();}
+
+function onRw(i){
+  const o=P.rwOpts[i];
+  if(o.ok){award(P.rwWrong.size?20:50);
+    const why=o.why;P.rwStep++;
+    if(P.rwStep<R.rw.length){P.rwOpts=shuffle(R.rw[P.rwStep].opts.slice());P.rwWrong=new Set();setFb('good',why);renderAll();}
+    else{P.rwDone=true;P.phase='line';setFb('good',why+` Now draw <span class="m"><i>y</i> = ${kTxt(R.k)}</span>.`);renderAll();}
+  }else{miss();P.rwWrong.add(i);setFb('bad',o.why);renderAll();}
+}
+function lockLine(){
+  if(Math.abs(P.lineY-R.k)<R.snap/2){award(P.lineTries?20:50);P.phase='ab';
+    const n=ROOTS.length;
+    setFb('good',n?`The curve meets the line at <span class="m"><i>x</i> = ${ROOTS.map(lab).join(', ')}</span>. These ${n>1?'are':'is'} the boundary point${n>1?'s':''} of your answer.`:`The curve never meets this line. So it is entirely on one side of it.`);
+    renderAll();
+  }else{miss();P.lineTries=(P.lineTries||0)+1;
+    const hint=P.lineTries>=2?` Move it to <span class="m"><i>y</i> = ${kTxt(R.k)}</span>.`:` Look at the number on the other side of the inequality sign.`;
+    setFb('bad',`Your line is <span class="m"><i>y</i> = ${num(P.lineY,R.snap<1?1:0)}</span>, but ${base()} compares the curve with a different value.${hint}`);
+    drawTask();
+  }
+}
+function onAb(val){
+  const ok=(R.sign[0]==='>')===(val==='above');
+  if(ok){award(P.abWrong?10:50);P.phase='shade';
+    setFb('good',`Right. “${SIGNT[R.sign][0]==='>'?'&gt;':'&lt;'}” means the curve is <b>${val}</b> the line${R.sign.length>1?', and “or equal” adds the points where it meets the line':''}. The tinted zone shows where it needs to be.`);
+    renderAll();
+  }else{miss();P.abWrong=val;setFb('bad',`${SIGNT[R.sign]} compares <i>y</i>-values. A bigger <i>y</i>-value is higher up the graph, so “${R.sign[0]==='>'?'greater than':'less than'}” means <b>${R.sign[0]==='>'?'above':'below'}</b>.`);drawTask();}
+}
+function toggle(i){if(P.phase!=='shade')return;P.sel[i]=!P.sel[i];P.bad.delete(i);P.fb=null;drawNL();drawDynamic();drawTask();}
+function checkShade(){
+  P.bad=new Set();EL.forEach((e,i)=>{if(!!P.sel[i]!==e.ok)P.bad.add(i)});
+  if(!P.bad.size){award(P.shadeTries?60:150);P.solved=true;enterWrite();return;}
+  miss();P.shadeTries++;
+  const segBad=[...P.bad].some(i=>EL[i].t==='seg');
+  const ptBad=[...P.bad].filter(i=>EL[i].t==='pt');
+  let msg;
+  if(segBad){const above=R.sign[0]==='>';msg=`Some shaded pieces don't match. Hover or tap a piece to see that part of the curve: is it ${above?'above':'below'} the red line there?`;}
+  else{
+    const e=EL[ptBad[0]];
+    if(e.end)msg=`The shading is right. Now check the end of the domain at <span class="m"><i>x</i> = ${lab(e.x)}</span>: is ${base()} true there? Read the curve's value at that end.`;
+    else if(e.touch)msg=`The shading is right. Look at <span class="m"><i>x</i> = ${lab(e.x)}</span>: the curve touches the line there, so the value is exactly ${kTxt(R.k)}. Does ${SIGNT[R.sign]} allow “equal”?`;
+    else msg=R.sign.length>1?`The shading is right. The sign is ${SIGNT[R.sign]}, so points where the curve meets the line are <b>included</b>: fill them in (●).`:`The shading is right. The sign is ${SIGN[R.sign]}, so points where the curve meets the line are <b>not included</b>: leave them hollow (○).`;
+  }
+  setFb('bad',msg+(P.shadeTries>=2?' Stuck? Use “Show me”.':''));renderAll();
+}
+function reveal(){P.sel=EL.map(e=>e.ok);P.bad=new Set();P.revealed=true;P.solved=true;miss();miss();enterWrite(true);}
+function enterWrite(rev){
+  const corr=EL.map(e=>e.ok),ct=selText(corr);
+  const cand=[];
+  cand.push({t:selText(EL.map(e=>e.t==='seg'?!e.ok:e.ok)),why:`That describes where the curve is on the <b>other</b> side of the line.`});
+  cand.push({t:selText(EL.map(e=>e.t==='pt'&&!e.end?!e.ok:e.ok)),why:`Check the end points: ${R.sign.length>1?'≥ and ≤ include':'&gt; and &lt; leave out'} the points where the curve meets the line.`});
+  if(ct.includes(' or '))cand.push({t:selText(corr,' and '),why:`No single number can be in two separate pieces at once. Join separate pieces with “or”.`});
+  cand.push({t:`x ${SIGNT[R.sign]} ${kTxt(R.k)}`,why:`${kTxt(R.k)} is a <i>y</i>-value (the height of the line). The answer needs the <i>x</i>-values read off the <i>x</i>-axis.`});
+  const seen=new Set([ct]),opts=[];cand.forEach(c=>{if(!seen.has(c.t)&&opts.length<3){seen.add(c.t);opts.push(c)}});
+  opts.push({t:ct,ok:true});
+  P.wOpts=shuffle(opts);P.wWrong=new Set();P.phase='write';
+  setFb(rev?'info':'good',rev?`Here is the correct strip. Compare it with the curve and the tinted zone, then pick the matching statement.`:`Spot on. The highlighted parts of the curve are exactly the ones in the tinted zone.`);
+  renderAll();
+}
+function onW(i){
+  const o=P.wOpts[i];
+  if(o.ok){award(P.wWrong.size?30:100);finishRound();}
+  else{miss();P.wWrong.add(i);setFb('bad',o.why);drawTask();}
+}
+function finishRound(){
+  let stars=P.mist===0?3:P.mist<=2?2:1;if(P.revealed)stars=1;
+  if(P.mist===0){S.streak++;award(S.streak>1?25*(S.streak-1):0);}else S.streak=0;
+  P.earned=stars;
+  const prev=S.results[R.id];
+  if(!prev||prev.stars<stars||(prev.stars===stars&&prev.pts<P.pts)){S.score+=P.pts-(prev?prev.pts:0);S.results[R.id]={stars,pts:P.pts};}
+  persist();P.phase='done';renderAll();
+}
+function nextRound(){if(S.idx<ROUNDS.length-1)startRound(S.idx+1);else showEnd();}
+function showEnd(){
+  const tot=Object.values(S.results).reduce((a,r)=>a+r.stars,0),max=ROUNDS.length*3,done=Object.keys(S.results).length;
+  const rank=tot>=max-3?'Graph reader, gold standard':tot>=max*0.7?'Confident line-drawer':tot>=max*0.4?'Getting the picture':'Keep sketching';
+  document.getElementById('modalCard').innerHTML=`<h2>${rank}</h2>
+  <div class="row"><span class="big">${tot}/${max}</span><span class="why">stars across ${done} of ${ROUNDS.length} rounds · ${S.score} points</span></div>
+  <p><b>What to remember</b></p>
+  <ul>
+    <li>Rearrange first so the inequality reads <span class="m"><i>f</i>(<i>x</i>) ? <i>k</i></span>. Dividing or multiplying by a negative flips the sign.</li>
+    <li>Draw <span class="m"><i>y</i> = <i>k</i></span>. Then <span class="m">&gt;</span> means the curve is <b>above</b> the line and <span class="m">&lt;</span> means <b>below</b>.</li>
+    <li>Read the answer on the <span class="m"><i>x</i></span>-axis. Meeting points are included for ≥ and ≤, and left out for &gt; and &lt;.</li>
+    <li>If the curve only touches the line, or the graph has a limited domain, check those single points separately.</li>
+  </ul>
+  <div class="row"><button class="btn primary" data-act="restart">Play again from the warm-up</button><button class="btn" data-act="close">Close</button></div>`;
+  document.getElementById('modal').hidden=false;
+}
+
+/* ---------- events ---------- */
+document.getElementById('roundNav').addEventListener('click',e=>{const b=e.target.closest('[data-round]');if(b)startRound(+b.dataset.round);});
+task.addEventListener('click',e=>{const b=e.target.closest('[data-act]');if(!b||b.disabled)return;const a=b.dataset.act;
+  if(a==='rw')onRw(+b.dataset.i);
+  else if(a==='up'||a==='dn'){P.lineY=Math.max(R.view[2],Math.min(R.view[3],snapY(P.lineY+(a==='up'?R.snap:-R.snap))));drawDynamic();const o=document.getElementById('lineOut');if(o)o.textContent=`y = ${num(P.lineY,R.snap<1?1:0)}`;}
+  else if(a==='lock')lockLine();
+  else if(a==='ab')onAb(b.dataset.v);
+  else if(a==='check')checkShade();
+  else if(a==='clear'){P.sel=EL.map(()=>false);P.bad=new Set();P.fb=null;renderAll();}
+  else if(a==='reveal')reveal();
+  else if(a==='w')onW(+b.dataset.i);
+  else if(a==='next')nextRound();
+  else if(a==='replay')startRound(S.idx);
+});
+document.getElementById('modal').addEventListener('click',e=>{const b=e.target.closest('[data-act]');if(!b&&e.target.id!=='modal')return;
+  document.getElementById('modal').hidden=true;
+  if(b&&b.dataset.act==='restart'){S={idx:0,results:{},score:0,streak:0};persist();startRound(0);}
+});
+nl.addEventListener('click',e=>{const h=e.target.closest('.hit');if(h)toggle(+h.dataset.i);});
+nl.addEventListener('pointerover',e=>{const h=e.target.closest('.hit');if(!h||P.phase!=='shade')return;const i=+h.dataset.i;if(P.hover!==i){P.hover=i;drawDynamic();drawNL();}});
+nl.addEventListener('pointerleave',()=>{if(P.hover!=null){P.hover=null;drawDynamic();drawNL();}});
+function svgY(ev){const pt=graph.createSVGPoint();pt.x=ev.clientX;pt.y=ev.clientY;return pt.matrixTransform(graph.getScreenCTM().inverse()).y;}
+let dragging=false;
+function setLineFromEvent(ev){let y=snapY(iy(svgY(ev)));y=Math.max(R.view[2],Math.min(R.view[3],y));if(y!==P.lineY){P.lineY=y;drawDynamic();const o=document.getElementById('lineOut');if(o)o.textContent=`y = ${num(P.lineY,R.snap<1?1:0)}`;}}
+graph.addEventListener('pointerdown',ev=>{if(P.phase!=='line')return;dragging=true;try{graph.setPointerCapture(ev.pointerId)}catch(e){}setLineFromEvent(ev);ev.preventDefault();});
+graph.addEventListener('pointermove',ev=>{if(dragging)setLineFromEvent(ev);});
+['pointerup','pointercancel'].forEach(t=>graph.addEventListener(t,()=>{dragging=false;}));
+graph.addEventListener('keydown',ev=>{if(P.phase!=='line')return;
+  if(ev.key==='ArrowUp'||ev.key==='ArrowDown'){ev.preventDefault();P.lineY=Math.max(R.view[2],Math.min(R.view[3],snapY(P.lineY+(ev.key==='ArrowUp'?R.snap:-R.snap))));drawDynamic();const o=document.getElementById('lineOut');if(o)o.textContent=`y = ${num(P.lineY,R.snap<1?1:0)}`;}
+  if(ev.key==='Enter')lockLine();});
+
+let lastW=0;try{new ResizeObserver(()=>{const w=document.querySelector('.board').clientWidth;if(R&&Math.abs(w-lastW)>8){lastW=w;drawStatic();drawDynamic();drawNL();}}).observe(document.querySelector('.board'));}catch(e){}
+/* ---------- boot (with live-update hook) ---------- */
+function snapshot(){return {S,idx:S.idx,P:P?{...P,rwWrong:[...P.rwWrong],bad:[...P.bad],wWrong:[...P.wWrong],rwOpts:P.rwOpts.map(o=>R.rw?R.rw[P.rwStep]?.opts.indexOf(o):-1)}:null};}
+function start(data){
+  if(data&&data.S){S=data.S;}
+  if(data&&data.P&&data.P.phase&&data.P.phase!=='rw'&&data.P.phase!=='write'){const k={...data.P};delete k.rwOpts;delete k.wOpts;startRound(data.idx||0,k);}
+  else startRound(S.idx||0);
+}
+try{window.claude?.hot?.snapshot?.(snapshot);}catch(e){}
+window.claude?.hot?.ready?window.claude.hot.ready(start):start(window.claude?.hot?.data??{});
+
+/* expose for testing */
+window.__ATL={ROUNDS,answer:i=>{startRound(i);return selText(EL.map(e=>e.ok));}};
+})();
+</script>
+
+</body></html>
